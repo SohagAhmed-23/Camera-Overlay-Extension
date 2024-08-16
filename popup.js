@@ -7,13 +7,37 @@ document.getElementById('stopBtn').addEventListener('click', stopRecording);
 
 function startRecording() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tabId = tabs[0].id;
+    
+    // Inject a script to create the overlay and start the camera
     chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      files: ['content.js']
+      target: { tabId: tabId },
+      func: createCameraOverlay
     }, () => {
       setTimeout(startScreenRecording, 1000); // Ensure the camera overlay has started
     });
   });
+}
+
+function createCameraOverlay() {
+  if (!document.getElementById('cameraOverlay')) {
+    const cameraOverlay = document.createElement('div');
+    cameraOverlay.id = 'cameraOverlay';
+
+    const video = document.createElement('video');
+    video.id = 'cameraStream';
+    video.autoplay = true;
+
+    cameraOverlay.appendChild(video);
+    document.body.appendChild(cameraOverlay);
+
+    // Request camera access and stream to video element
+    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+      video.srcObject = stream;
+    }).catch((error) => {
+      console.error('Error accessing camera:', error);
+    });
+  }
 }
 
 function startScreenRecording() {
@@ -57,10 +81,27 @@ function stopRecording() {
     stream.getTracks().forEach(track => track.stop());
   }
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.runtime.sendMessage({ command: 'stopCamera', tabId: tabs[0].id });
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      func: removeCameraOverlay
+    });
   });
   document.getElementById('startBtn').disabled = false;
   document.getElementById('stopBtn').disabled = true;
+}
+
+function removeCameraOverlay() {
+  const video = document.getElementById('cameraStream');
+  if (video) {
+    const stream = video.srcObject;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    const cameraOverlay = document.getElementById('cameraOverlay');
+    if (cameraOverlay) {
+      cameraOverlay.remove();
+    }
+  }
 }
 
 function resetRecordingState() {
