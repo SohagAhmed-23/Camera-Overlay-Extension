@@ -32,7 +32,7 @@ function createCameraOverlay() {
     document.body.appendChild(cameraOverlay);
 
     // Request camera access and stream to video element
-    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true}).then((stream) => {
       video.srcObject = stream;
     }).catch((error) => {
       console.error('Error accessing camera:', error);
