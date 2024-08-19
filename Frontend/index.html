@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Extension Installation</title>
+    <script>
+        const extensionId = "fhinpejeaococjmjclmamhmkmkdoogdf"; // Replace with your extension's ID
+
+        function checkExtension() {
+            const script = document.createElement('script');
+            script.src = `chrome-extension://${extensionId}/check_installation.js`;
+
+            script.onload = function() {
+                if (window.extensionData && window.extensionData.installed) {
+                    alert(window.extensionData.message);
+                    window.location.href = "nextpage.html";
+                }
+            };
+
+            script.onerror = function() {
+                showInstallPrompt();
+            };
+
+            document.head.appendChild(script);
+        }
+
+        function showInstallPrompt() {
+            const install = confirm("The ScreenCam Overlay Extension is not installed. Would you like to install it?");
+            if (install) {
+                window.open(`https://chrome.google.com/webstore/detail/${extensionId}`, '_blank');
+            }
+        }
+    </script>
+</head>
+<body>
+    <button onclick="checkExtension()">Check Extension and Proceed</button>
+</body>
+</html>
