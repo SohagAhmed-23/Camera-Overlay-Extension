@@ -148,3 +148,15 @@ function resetRecordingState() {
   stream = null;
   recordedChunks = [];
 }
+
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "DATA_FROM_WEBPAGE") {
+      const data = request.payload;
+
+      // Use the data as needed in the popup
+      console.log("Data received in popup:", data);
+      document.getElementById('displayName').textContent = `Name: ${data.name}`;
+      document.getElementById('displayId').textContent = `ID: ${data.id}`;
+  }
+});

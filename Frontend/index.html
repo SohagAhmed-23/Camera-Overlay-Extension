@@ -31,9 +31,19 @@
                 window.open(`https://chrome.google.com/webstore/detail/${extensionId}`, '_blank');
             }
         }
+        function sendDataToExtension() {
+            const data = { name: "Sohag", id: 1563 };
+
+            // Send the data to the content script via window.postMessage
+            window.postMessage({ type: "SEND_DATA_TO_EXTENSION", payload: data }, "*");
+            console.log("Data sent to extension");
+        }
+        
+
     </script>
 </head>
 <body>
-    <button onclick="checkExtension()">Check Extension and Proceed</button>
+    <button onclick="checkExtension()">Check Installed</button>
+    <button onclick="sendDataToExtension()">Send Data to Extension</button>
 </body>
 </html>
