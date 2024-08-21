@@ -76,41 +76,52 @@ function createCameraOverlay() {
     });
   }
 }
-
 function startScreenRecording() {
-  chrome.tabCapture.capture({ video: true, audio: true }, function(capturedStream) {
-    if (chrome.runtime.lastError) {
-      console.error('Capture error:', chrome.runtime.lastError);
+  chrome.desktopCapture.chooseDesktopMedia(['screen'], (streamId) => {
+    if (!streamId) {
+      console.error('Failed to get stream ID');
       return;
     }
-    if (!capturedStream) {
-      console.error('Failed to capture stream');
-      return;
-    }
-    stream = capturedStream;
-    recordedChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
 
-    mediaRecorder.ondataavailable = function(event) {
-      if (event.data.size > 0) {
-        recordedChunks.push(event.data);
+    navigator.mediaDevices.getUserMedia({
+      video: {
+        mandatory: {
+          chromeMediaSource: 'desktop',
+          chromeMediaSourceId: streamId
+        }
       }
-    };
+    }).then((capturedStream) => {
+      console.log("Stream is on");
 
-    mediaRecorder.onstop = function() {
-      const blob = new Blob(recordedChunks, { type: 'video/webm' });
-      
-      // Directly upload to Moodle
-      uploadFileToMoodle(blob, 'screen-recording.webm');
-      
-      resetRecordingState();
-    };
+      // Ensure you use the local variable for the stream
+      stream = capturedStream;
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
 
-    mediaRecorder.start();
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('stopBtn').disabled = false;
+      mediaRecorder.ondataavailable = function(event) {
+        if (event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+
+        // Directly upload to Moodle
+        uploadFileToMoodle(blob, 'screen-recording.webm');
+
+        resetRecordingState();
+      };
+
+      mediaRecorder.start();
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+    }).catch((err) => {
+      console.error('Error capturing screen:', err);
+    });
   });
 }
+
 
 function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
